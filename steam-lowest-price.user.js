@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Steam Lowest Seen Price from IsThereAnyDeal
 // @namespace    https://github.com/Dragonmost/SteamPrice
-// @version      1.0
+// @version      1.1
 // @description  Shows IsThereAnyDeal historical low next to the current Steam store price for your region.
 // @downloadURL  https://raw.githubusercontent.com/Dragonmost/SteamPrice/master/steam-lowest-price.user.js
 // @updateURL    https://raw.githubusercontent.com/Dragonmost/SteamPrice/master/steam-lowest-price.user.js
@@ -171,6 +171,11 @@
     }
 
     function hasLabel(priceElement) {
+        const actionRow = priceElement.closest('.game_purchase_action, .game_purchase_action_bg');
+        if (actionRow && actionRow.querySelector(`.${LABEL_CLASS}`)) {
+            return true;
+        }
+
         return Boolean(priceElement.parentElement && priceElement.parentElement.querySelector(`.${LABEL_CLASS}`));
     }
 
@@ -466,6 +471,20 @@
         const label = document.createElement('span');
         label.className = LABEL_CLASS;
         label.textContent = text;
+
+        // Discounted rows use nested price spans; place label on the action row for stable layout.
+        const actionRow = priceElement.closest('.game_purchase_action, .game_purchase_action_bg');
+        if (actionRow) {
+            const priceContainer = actionRow.querySelector('.discount_block, .discount_prices, .game_purchase_price');
+            if (priceContainer) {
+                priceContainer.insertAdjacentElement('afterend', label);
+                return;
+            }
+
+            actionRow.appendChild(label);
+            return;
+        }
+
         priceElement.insertAdjacentElement('afterend', label);
     }
 
@@ -500,16 +519,17 @@
             .${LABEL_CLASS} {
                 display: inline-flex;
                 align-items: center;
-                margin-left: 8px;
-                padding: 2px 8px;
-                border-radius: 999px;
+                justify-content: center;
+                margin-left: 0;
+                padding: 0 10px;
+                min-height: 30px;
+                height: 100%;
                 background: rgba(35, 60, 81, 0.85);
-                border: 1px solid rgba(166, 218, 149, 0.45);
                 color: #c7d5e0;
                 font-size: 11px;
                 font-weight: 600;
-                line-height: 1.5;
                 white-space: nowrap;
+                box-sizing: border-box;
             }
         `;
 
